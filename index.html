@@ -1,119 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ohio River Flood Gauge (Cincinnati)</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #f4f4f4;
-        }
-        .container {
-            width: 350px;
-            margin: auto;
-            padding: 20px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        .gauge-container {
-            position: relative;
-            width: 100px;
-            height: 400px;
-            margin: 20px auto;
-            border: 2px solid #333;
-            border-radius: 10px;
-            background: linear-gradient(to top, 
-                #0044cc 42%,  /* Moderate Flooding */
-                #ffcc00 56%,  /* Significant Flooding */
-                #ff6600 66%,  /* Major Flooding */
-                #cc0000 72%   /* Catastrophic Flooding */
-            );
-            overflow: hidden;
-        }
-        .water {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            background-color: rgba(0, 100, 255, 0.8);
-            transition: height 1s ease-in-out;
-        }
-        .marker {
-            position: absolute;
-            left: -40px;
-            font-size: 14px;
-            font-weight: bold;
-            color: #333;
-        }
-        .real-time {
-            margin-top: 20px;
-            font-size: 18px;
-            font-weight: bold;
-            color: #333;
-        }
-        /* Key flood level markers */
-        .level-marker {
-            position: absolute;
-            left: -35px;
-            font-size: 12px;
-            font-weight: bold;
-            color: black;
-            border-left: 5px solid black;
-            padding-left: 5px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>USGS Real-Time Data</title>
 </head>
 <body>
+  <h1>Water Gauge Data for Site 03255000</h1>
+  <div id="dataDisplay">Loading data...</div>
 
-    <div class="container">
-        <h2>Ohio River Flood Gauge (Cincinnati)</h2>
-        <div class="gauge-container">
-            <div class="water" id="waterLevel"></div>
-
-            <!-- Flood Level Markers -->
-            <div class="level-marker" style="bottom: 10%;">42 ft - Riverbend</div>
-            <div class="level-marker" style="bottom: 20%;">45 ft - Stage Floods</div>
-            <div class="level-marker" style="bottom: 25%;">47 ft - Coney Island</div>
-            <div class="level-marker" style="bottom: 30%;">50 ft - Willows River Camp</div>
-            <div class="level-marker" style="bottom: 40%;">56 ft - Coney Island Underwater</div>
-            <div class="level-marker" style="bottom: 45%;">59 ft - Route 52 Floods</div>
-            <div class="level-marker" style="bottom: 55%;">64 ft - New Richmond Floods</div>
-            <div class="level-marker" style="bottom: 65%;">70 ft - FEMA 1% Flood</div>
-            <div class="level-marker" style="bottom: 75%;">76 ft - Catastrophic</div>
-            <div class="level-marker" style="bottom: 85%;">80 ft - Record Flood</div>
-        </div>
-
-        <div class="real-time">Current Flood Stage: <span id="currentLevel">Loading...</span> ft</div>
-        <p>Data updates every 5 minutes from NOAA.</p>
-    </div>
-
-    <script>
-        async function fetchFloodStage() {
-            try {
-                let response = await fetch("https://api.weather.gov/stations/CCNO1/observations/latest");
-                let data = await response.json();
-                let floodStage = data.properties.elevation.value.toFixed(1);
-
-                document.getElementById("currentLevel").innerText = floodStage;
-
-                let minHeight = 42;  // Lowest flood stage
-                let maxHeight = 80;  // Highest flood stage
-                let gaugeHeight = 400; // Total gauge height in pixels
-
-                let waterHeight = ((floodStage - minHeight) / (maxHeight - minHeight)) * gaugeHeight;
-                document.getElementById("waterLevel").style.height = `${Math.max(0, Math.min(waterHeight, gaugeHeight))}px`;
-
-            } catch (error) {
-                console.error("Error fetching flood data:", error);
-                document.getElementById("currentLevel").innerText = "Unavailable";
-            }
+  <script>
+    const apiUrl = 'https://waterservices.usgs.gov/nwis/iv/?format=json&sites=03255000';
+    fetch(apiUrl)
+      .then(response => response.json())
+      .then(data => {
+        let timeSeries = data.value.timeSeries;
+        if (timeSeries && timeSeries.length > 0) {
+          let parameter = timeSeries[0].variable.variableName;
+          let currentValue = timeSeries[0].values[0].value[0].value;
+          let measurementTime = timeSeries[0].values[0].value[0].dateTime;
+          document.getElementById('dataDisplay').innerHTML =
+            `<p><strong>${parameter}:</strong> ${currentValue}</p>
+             <p><em>Measured at: ${measurementTime}</em></p>`;
+        } else {
+          document.getElementById('dataDisplay').textContent = 'No data available';
         }
-
-        fetchFloodStage(); // Initial load
-        setInterval(fetchFloodStage, 300000); // Update every 5 minutes
-    </script>
-
+      })
+      .catch(error => {
+        console.error('Error fetching data:', error);
+        document.getElementById('dataDisplay').textContent = 'Error loading data';
+      });
+  </script>
 </body>
 </html>
