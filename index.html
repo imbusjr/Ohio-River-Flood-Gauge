@@ -11,21 +11,27 @@
             background-color: #f4f4f4;
         }
         .container {
-            width: 300px;
+            width: 350px;
             margin: auto;
             padding: 20px;
             background: white;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-        .gauge {
-            width: 80px;
-            height: 400px;
+        .gauge-container {
             position: relative;
-            background: linear-gradient(to top, #0044cc 50%, #ffcc00 65%, #ff6600 75%, #cc0000 85%);
-            border-radius: 10px;
-            overflow: hidden;
+            width: 100px;
+            height: 400px;
             margin: 20px auto;
+            border: 2px solid #333;
+            border-radius: 10px;
+            background: linear-gradient(to top, 
+                #0044cc 42%,  /* Moderate Flooding */
+                #ffcc00 56%,  /* Significant Flooding */
+                #ff6600 66%,  /* Major Flooding */
+                #cc0000 72%   /* Catastrophic Flooding */
+            );
+            overflow: hidden;
         }
         .water {
             position: absolute;
@@ -36,9 +42,10 @@
         }
         .marker {
             position: absolute;
-            left: -30px;
+            left: -40px;
             font-size: 14px;
             font-weight: bold;
+            color: #333;
         }
         .real-time {
             margin-top: 20px;
@@ -46,15 +53,38 @@
             font-weight: bold;
             color: #333;
         }
+        /* Key flood level markers */
+        .level-marker {
+            position: absolute;
+            left: -35px;
+            font-size: 12px;
+            font-weight: bold;
+            color: black;
+            border-left: 5px solid black;
+            padding-left: 5px;
+        }
     </style>
 </head>
 <body>
 
     <div class="container">
         <h2>Ohio River Flood Gauge (Cincinnati)</h2>
-        <div class="gauge">
-            <div class="water" id="waterLevel" style="height: 0;"></div>
+        <div class="gauge-container">
+            <div class="water" id="waterLevel"></div>
+
+            <!-- Flood Level Markers -->
+            <div class="level-marker" style="bottom: 10%;">42 ft - Riverbend</div>
+            <div class="level-marker" style="bottom: 20%;">45 ft - Stage Floods</div>
+            <div class="level-marker" style="bottom: 25%;">47 ft - Coney Island</div>
+            <div class="level-marker" style="bottom: 30%;">50 ft - Willows River Camp</div>
+            <div class="level-marker" style="bottom: 40%;">56 ft - Coney Island Underwater</div>
+            <div class="level-marker" style="bottom: 45%;">59 ft - Route 52 Floods</div>
+            <div class="level-marker" style="bottom: 55%;">64 ft - New Richmond Floods</div>
+            <div class="level-marker" style="bottom: 65%;">70 ft - FEMA 1% Flood</div>
+            <div class="level-marker" style="bottom: 75%;">76 ft - Catastrophic</div>
+            <div class="level-marker" style="bottom: 85%;">80 ft - Record Flood</div>
         </div>
+
         <div class="real-time">Current Flood Stage: <span id="currentLevel">Loading...</span> ft</div>
         <p>Data updates every 5 minutes from NOAA.</p>
     </div>
@@ -64,17 +94,17 @@
             try {
                 let response = await fetch("https://api.weather.gov/stations/CCNO1/observations/latest");
                 let data = await response.json();
-                let floodStage = data.properties.elevation.value.toFixed(1); // Extract water level
-                
+                let floodStage = data.properties.elevation.value.toFixed(1);
+
                 document.getElementById("currentLevel").innerText = floodStage;
-                
+
                 let minHeight = 42;  // Lowest flood stage
                 let maxHeight = 80;  // Highest flood stage
                 let gaugeHeight = 400; // Total gauge height in pixels
-                
+
                 let waterHeight = ((floodStage - minHeight) / (maxHeight - minHeight)) * gaugeHeight;
                 document.getElementById("waterLevel").style.height = `${Math.max(0, Math.min(waterHeight, gaugeHeight))}px`;
-                
+
             } catch (error) {
                 console.error("Error fetching flood data:", error);
                 document.getElementById("currentLevel").innerText = "Unavailable";
@@ -82,7 +112,7 @@
         }
 
         fetchFloodStage(); // Initial load
-        setInterval(fetchFloodStage, 300000); // Update every 5 minutes (300,000 ms)
+        setInterval(fetchFloodStage, 300000); // Update every 5 minutes
     </script>
 
 </body>
