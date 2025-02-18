@@ -9,7 +9,7 @@
   <div id="dataDisplay">Loading data...</div>
 
   <script>
-    const apiUrl = 'https://waterservices.usgs.gov/nwis/iv/?format=json&sites=03255000';
+    const apiUrl = 'https://waterservices.usgs.gov/nwis/iv/?format=json&sites=03255000&siteStatus=all';
     fetch(apiUrl)
       .then(response => response.json())
       .then(data => {
